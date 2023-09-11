@@ -1,2 +1,2 @@
-# ecological_genomics_2023
+# Ecological Genomics
  UVM PBIO 6800 Ecological Genomics course Fall 2023
