@@ -46,3 +46,7 @@
 <div id='id-section3'/>
 
 ### Entry 3: 2023-09-18.
+
+-  We checked the SAM files we outputted after the read mapping last week and learned what the SAM FLAGs mean.
+-  We used sambamba to process our mapped reads, converting the SAM alignment file to a binary BAM file, removing PCR duplicate reads, and indexing and sorting the BAM file.
+-  We began editing a bash script to run samtools, which wil; calculate mapping stats and produce a summary of how well our reads mapped.
