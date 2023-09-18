@@ -10,8 +10,7 @@
 
 ### End Date:
 
-### Project Description: 
-This notebook will document my workflow on the bioinformatics of the Population Genomics section of the Fall 2023 Ecological Genomics course.
+### Project Description: This notebook will document my workflow on the bioinformatics of the Population Genomics section of the Fall 2023 Ecological Genomics course.
 
 # Table of Contents:
 
