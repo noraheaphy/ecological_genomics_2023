@@ -17,6 +17,7 @@
 -   [Entry 1: 2023-09-11](#id-section1)
 -   [Entry 2: 2023-09-13](#id-section2)
 -   [Entry 3: 2023-09-18](#id-section3)
+-   [Entry 3: 2023-09-20](#id-section4)
 
 ------------------------------------------------------------------------
 
@@ -49,4 +50,12 @@
 
 -  We checked the SAM files we outputted after the read mapping last week and learned what the SAM FLAGs mean.
 -  We used sambamba to process our mapped reads, converting the SAM alignment file to a binary BAM file, removing PCR duplicate reads, and indexing and sorting the BAM file.
--  We began editing a bash script to run samtools, which wil; calculate mapping stats and produce a summary of how well our reads mapped.
+-  We began editing a bash script to run samtools, which will calculate mapping stats and produce a summary of how well our reads mapped.
+
+------------------------------------------------------------------------
+
+<div id='id-section4'/>
+
+### Entry 4: 2023-09-20.
+-  We calculated mapping stats with the 'bash_stats.sh' script.
+-  Used 'ANGSD.sh' script to estimate genotype likelihoods and allele frequencies after filtering to minimize noise and then use GLs to estimate the site frequency spectrum (SFS), nucleotide diversities, and neutrality stats We used a genotype likelihood approach because read depth was low.
