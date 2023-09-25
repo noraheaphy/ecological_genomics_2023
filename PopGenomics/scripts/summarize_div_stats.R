@@ -41,5 +41,8 @@ barplot(sfs, names = 1:length(sfs), main = 'Site Frequency Spectrum')
 mean(theta$tWsite)
 mean(theta$tPsite)
 
+# sum number of sites
+sum(theta$nSites)
+
 # To reset the panel plotting, execute the line below:
 dev.off()
