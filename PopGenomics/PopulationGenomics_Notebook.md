@@ -4,7 +4,7 @@
 
 ### Affiliation: University of Vermont, Dept. of Plant Biology
 
-### E-mail contact: [nora.heaphy\@uvm.edu](mailto:nora.heaphy@uvm.edu){.email}
+### E-mail contact: [nora.heaphy\@uvm.edu](mailto:nora.heaphy@uvm.edu)
 
 ### Start Date: Sept. 11, 2023
 
@@ -20,6 +20,8 @@
 -   [Entry 4: 2023-09-20](#id-section4)
 -   [Entry 5: 2023-09-25](#id-section5)
 -   [Entry 6: 2023-09-27](#id-section6)
+-   [Entry 7: 2023-10-02](#id-section7)
+-   [Entry 8: 2023-10-04](#id-section8)
 
 ------------------------------------------------------------------------
 
@@ -77,6 +79,20 @@
 <div id='id-section6'/>
 
 ### Entry 6: 2023-09-27.
+
 - We reviewed the diversity statistics for all the different populations.
 - We estimate genetic differentiation (Fst) in ANGSD between our focal red spruce pops and black spruce.
 - We visualized population structure using PCA and admixture with the pcANGSD program.
+
+------------------------------------------------------------------------
+
+<div id='id-section7'/>
+
+### Entry 7: 2023-10-02.
+
+
+------------------------------------------------------------------------
+
+<div id='id-section8'/>
+
+### Entry 8: 2023-10-04.
