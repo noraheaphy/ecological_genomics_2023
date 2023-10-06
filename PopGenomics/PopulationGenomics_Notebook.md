@@ -90,9 +90,16 @@
 
 ### Entry 7: 2023-10-02.
 
+- We used pcANGSD to run a scan for Fst outliers.
+- We identified and visualized the outlier loci in R.
+- We exported our contigs out of R, filtered out only those containing genes, and searched for annotations at plantgenie.org.
 
 ------------------------------------------------------------------------
 
 <div id='id-section8'/>
 
 ### Entry 8: 2023-10-04.
+
+-  We got our PCA covariates and outlier contigs out of R.
+-  We attached BioClim data to red spruce occurrences and made a climate PCA.
+-  We ran a GEA test to see which outlier loci are associated with climate.
