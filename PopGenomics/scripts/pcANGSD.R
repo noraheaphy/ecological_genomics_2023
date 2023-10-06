@@ -1,7 +1,7 @@
 library(ggplot2) # plotting
 library(ggpubr) # plotting
 
-setwd("Desktop/01_projects/PBIO_6800_ecological_genomics/ecological_genomics_2023/PopGenomics/results/") # set the path to where you saved the pcANGSD results on your laptop
+setwd("~/Desktop/01_projects/PBIO_6800_ecological_genomics/ecological_genomics_2023/PopGenomics/results/") # set the path to where you saved the pcANGSD results on your laptop
 
 ## First, let's work on the genetic PCA:
 
@@ -18,8 +18,8 @@ var[1:3]
 # A "screeplot" of the eigenvalues of the PCA:
 
 barplot(var, 
-        xlab="Eigenvalues of the PCA", 
-        ylab="Proportion of variance explained")
+        xlab = "Eigenvalues of the PCA", 
+        ylab = "Proportion of variance explained")
 
 ## Bring in the bam.list file and extract the sample info:
 
@@ -87,7 +87,7 @@ abline(v=cumsum(sapply(unique(pops[ord,2]),function(x){sum(pops[ord,2]==x)})),co
 
 library(RcppCNPy) # for reading python numpy (.npy) files
 
-setwd("Desktop/01_projects/PBIO_6800_ecological_genomics/ecological_genomics_2023/PopGenomics/results/")
+setwd("~/Desktop/01_projects/PBIO_6800_ecological_genomics/ecological_genomics_2023/PopGenomics/results/")
 
 list.files()
 
@@ -96,7 +96,7 @@ list.files()
 s <- npyLoad("allRS_poly.selection.npy")
 
 # convert test statistic to p-value
-pval <- as.data.frame(1-pchisq(s,1))
+pval <- as.data.frame(1 - pchisq(s, 1))
 names(pval) = c("p_PC1", "p_PC2")
 
 ## read positions
@@ -128,20 +128,35 @@ sel_contig <- p_filtered[which(pval==min(pval$p_PC1)), c("chromo", "position")]
 sel_contig
 
 # get all the outliers with p-values below some cutoff
-cutoff = 1e-4   # equals a 1 in 5,000 probability
-outlier_contigs <- p_filtered[which(pval$p_PC1 < cutoff), c("chromo", "position")]
-outlier_contigs
+cutoff = 1e-3
+outliers_PC1 <- p_filtered[which(pval$p_PC1 < cutoff),c("chromo", "position")]
+outliers_PC2 <- p_filtered[which(pval$p_PC2 < cutoff),c("chromo", "position")]
 
 # how many outlier loci < the cutoff?
-dim(outlier_contigs)[1]
+dim(outliers_PC1)[1]
+dim(outliers_PC2)[1]
 
 # how many unique contigs harbor outlier loci?
-length(unique(outlier_contigs$chromo))
+length(unique(outliers_PC1$chromo))
 
 # export outlier contigs
-write.table(unique(outlier_contigs$chromo),
-            "allRS_poly_PC1_outlier_contigs_1eneg4.txt", 
-            sep = "\t",
+write.table(outliers_PC1,
+            "allRS_poly_outliers_PC1.txt", 
+            sep = ":",
+            quote = F,
+            row.names = F,
+            col.names = F)
+
+COV <- as.matrix(read.table("allRS_poly.cov"))
+
+PCA <- eigen(COV)
+
+data = as.data.frame(PCA$vectors)
+data = data[,c(1:2)] # the second number here is the number of PC axes you want to keep
+
+write.table(data,
+            "allRS_poly_genPC1_2.txt",
+            sep="\t",
             quote = F,
             row.names = F,
             col.names = F)
