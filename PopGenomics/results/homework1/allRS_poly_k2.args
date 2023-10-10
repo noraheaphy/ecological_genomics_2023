@@ -1,0 +1,9 @@
+PCAngsd v1.11
+Time: 07/10/2023 12:04:46
+Directory: /data/users/n/h/nheaphy/myscripts/homework1
+Options:
+	-beagle /netfiles/ecogen/PopulationGenomics/ANGSD/allRS_poly_k2.beagle.gz
+	-n_eig 1
+	-out /users/n/h/nheaphy/myresults/homework1/allRS_poly_k2
+	-admix
+	-admix_alpha 50.0
