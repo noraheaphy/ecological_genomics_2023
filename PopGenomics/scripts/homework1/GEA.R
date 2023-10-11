@@ -8,7 +8,6 @@ bio <- getData("worldclim", var = "bio", res = 10)
 
 # if server is down:
 bioclim_list <- list.files("../../data/wc10/", pattern = ".bil", full.names = T)
-
 bio <- raster::stack(bioclim_list)
 
 coords <- read.csv("https://www.uvm.edu/~kellrlab/forClass/colebrookSampleMetaData.csv", header = T)
@@ -45,11 +44,13 @@ fviz_pca_biplot(clim_PCA,
                 col.ind = angsd_coords_clim$Latitude, 
                 gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
                 title = "Climate PCA (Bioclim)",
-                legend.title = "Latitude")
+                legend.title = "Latitude") + theme_bw()
+
+ggsave(filename = "clim_PCA.png", plot = last_plot(), dpi = 300)
 
 # Which variables show the strongest correlation on the first 2 climate PC axes?
 
-dimdesc(clim_PCA)[1:2]
+dimdesc(clim_PCA)[1:3]
 
 # Replace "XX" with your bio variable most significant on climate PC1:
 

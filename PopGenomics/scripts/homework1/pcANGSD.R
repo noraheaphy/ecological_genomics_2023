@@ -248,7 +248,7 @@ names(pval) = c("p_PC1", "p_PC2")
 p <- read.table("allRS_poly_mafs.sites", sep = "\t", header = T, stringsAsFactors = T)
 dim(p)
 
-p_filtered = p[which(p$X1==1),]
+p_filtered = p[which(p$kept_sites==1),] # for k=3, kept sites is X1
 dim(p_filtered)
 
 # How many sites got filtered out when testing for selection? Why?
