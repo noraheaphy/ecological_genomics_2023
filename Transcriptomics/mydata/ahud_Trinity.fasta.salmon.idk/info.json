@@ -1,0 +1,22 @@
+{
+    "index_version": 4,
+    "reference_gfa": [
+        "/data/project_data/RNAseq/assembly/ahud_Trinity.fasta.salmon.idx"
+    ],
+    "sampling_type": "dense",
+    "k": 31,
+    "num_kmers": 91840091,
+    "num_contigs": 1653693,
+    "seq_length": 141450881,
+    "have_ref_seq": true,
+    "have_edge_vec": false,
+    "SeqHash": "3a60baad5f960564d8d05d2ab4b89a77518ed43f7509f7d0ded45eb9aad89ad6",
+    "NameHash": "ca55387de101480ac5d3730fdae670ccddad039ab758355179a29eda0a102050",
+    "SeqHash512": "ef7528fc3d1e73e64a841a057fb6d43531add2f95c0191d7e894cc9ba36849979074231d23828ebb4e61c6429e51ab9571032d6906983222d7d48dadf4c1e1cf",
+    "NameHash512": "6a1b8db628ea1fec303dc7ac6c915f9df65f5dfe686ae0bc6c298d9a8948826c806b157a523e6dd3e43e3f116bf87a5ca59c2bf27eb66b0522c37171f348e20c",
+    "DecoySeqHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "DecoyNameHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "num_decoys": 0,
+    "first_decoy_index": 18446744073709551615,
+    "keep_duplicates": true
+}
