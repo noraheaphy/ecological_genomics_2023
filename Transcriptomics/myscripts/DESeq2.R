@@ -28,9 +28,16 @@ dim(countsTable)
 countsTableRound <- round(countsTable) # bc DESeq2 doesn't like decimals (and Salmon outputs data with decimals)
 head(countsTableRound)
 
-#import the sample discription table
-conds <- read.delim("myresults/ahud_samples_R.txt", header=TRUE, stringsAsFactors = TRUE, row.names=1)
+# subset to only F0
+# countsTableRound <- countsTableRound[,c(1:3,12:14,21:23,30:32)]
+
+#import the sample description table
+conds <- read.delim("myresults/ahud_samples_R.txt", header = TRUE, stringsAsFactors = TRUE, row.names = 1)
 head(conds)
+
+# subset to only F0
+# conds <- conds %>% filter(generation == "F0")
+# conds <- conds %>% dplyr::select(treatment)
 
 # Let's see how many reads we have from each sample
 colSums(countsTableRound)
@@ -43,7 +50,6 @@ barplot(colSums(countsTableRound), names.arg = colnames(countsTableRound),
 abline(h = mean(colSums(countsTableRound)), col = "blue", lwd = 2)
 
 # the average number of counts per gene
-rowSums(countsTableRound)
 mean(rowSums(countsTableRound)) # 8217.81
 median(rowSums(countsTableRound)) # 377
 
@@ -56,19 +62,43 @@ hist(apply(countsTableRound, 1, mean), xlim = c(0,1000), ylim = c(0,60000), brea
 dds <- DESeqDataSetFromMatrix(countData = countsTableRound, colData = conds, 
                               design = ~ generation + treatment)
 
-dim(dds)
+dim(dds) # [1] 67916    38
 
-# Filter out genes with too few reads - remove all genes with counts < 15 in more than 75% of samples, so ~28)
+###################### Test different read depth filters ######################
+
+# Filter out genes with too few reads 
+# remove all genes with counts < 15 in more than 75% of samples, so ~28)
 ## suggested by WGCNA on RNAseq FAQ
 
-dds <- dds[rowSums(counts(dds) >= 15) >= 28,]
-nrow(dds) 
+dds1 <- dds[rowSums(counts(dds) >= 15) >= 28,]
+nrow(dds1) # [1] 25260
 
 # Run the DESeq model to test for differential gene expression
-dds <- DESeq(dds)
+# this takes a little bit of time
+dds1 <- DESeq(dds1)
 
 # List the results you've generated
-resultsNames(dds)
+resultsNames(dds1)
+
+# Less stringent filtering: remove all genes with counts < 10 in more than 75% of samples
+dds2 <- dds[rowSums(counts(dds) >= 10) >= 28,]
+nrow(dds2) # [1] 28196
+dds2 <- DESeq(dds2)
+
+# More stringent filtering: remove all genes with counts < 25 in more than 75% of samples
+dds3 <- dds[rowSums(counts(dds) >= 25) >= 28,]
+nrow(dds3) # [1] 21763
+dds3 <- DESeq(dds3)
+
+# Way less stringent filtering: remove all genes with counts < 5 in more than 75% of samples
+dds4 <- dds[rowSums(counts(dds) >= 5) >= 28,]
+nrow(dds4) # [1] 33252
+dds4 <- DESeq(dds4)
+
+# Way more stringent filtering: remove all genes with counts < 20 in more than 75% of samples
+dds5 <- dds[rowSums(counts(dds) >= 35) >= 28,]
+nrow(dds5) # [1] 19571
+dds5 <- DESeq(dds5)
 
 ###################### Visualize data quality ######################
 
@@ -77,12 +107,18 @@ resultsNames(dds)
 # particularly the high variance of the logarithm of count data when the mean is low."
 
 # this gives log2(n + 1)
-ntd <- normTransform(dds)
+ntd <- normTransform(dds5)
+ 
+png(filename = "myresults/figures/ntd_dds5.png", width = 20, height = 16, units = "cm", res = 300)
 meanSdPlot(assay(ntd))
+dev.off()
 
 # Variance stabilizing transformation
-vsd <- vst(dds, blind = FALSE)
+vsd <- vst(dds5, blind = FALSE)
+
+png(filename = "myresults/figures/vsd_dds5.png", width = 20, height = 16, units = "cm", res = 300)
 meanSdPlot(assay(vsd))
+dev.off()
 
 sampleDists <- dist(t(assay(vsd)))
 
@@ -90,10 +126,13 @@ sampleDistMatrix <- as.matrix(sampleDists)
 rownames(sampleDistMatrix) <- paste(vsd$treatment, vsd$generation, sep="-")
 colnames(sampleDistMatrix) <- NULL
 colors <- colorRampPalette( rev(brewer.pal(9, "Blues")) )(255)
+
+png(filename = "myresults/figures/pheatmap_dds5.png", width = 20, height = 16, units = "cm", res = 300)
 pheatmap(sampleDistMatrix,
          clustering_distance_rows=sampleDists,
          clustering_distance_cols=sampleDists,
          col=colors)
+dev.off()
 
 # AM_F11_Rep3 and OA_F2_Rep2 could be outliers
 # OA = ocean acidification
@@ -106,16 +145,18 @@ pheatmap(sampleDistMatrix,
 # PCA to visualize global gene expression patterns
 
 # first transform the data for plotting using variance stabilization
-vsd <- vst(dds, blind = FALSE)
+vsd <- vst(dds5, blind = FALSE)
 
 pcaData <- plotPCA(vsd, intgroup = c("treatment", "generation"), returnData = TRUE)
 percentVar <- round(100 * attr(pcaData, "percentVar"))
 
+png(filename = "myresults/figures/global_PCA_dds5.png", width = 20, height = 16, units = "cm", res = 300)
 ggplot(pcaData, aes(PC1, PC2, color = treatment, shape = generation)) +
   geom_point(size = 3) +
   xlab(paste0("PC1: ", percentVar[1],"% variance")) +
   ylab(paste0("PC2: ", percentVar[2],"% variance")) + 
   coord_fixed()
+dev.off()
 
 # Let's plot the PCA by generation in four panels
 
@@ -257,7 +298,7 @@ ggarrange(F0, F2, F4, F11, nrow = 2, ncol = 2)
 
 ## Check on the DE results from the DESeq command way above ##
 
-resAM_OWA <- results(dds, name = "treatment_OWA_vs_AM", alpha = 0.05)
+resAM_OWA <- results(dds1, name = "treatment_OWA_vs_AM", alpha = 0.05)
 
 resAM_OWA <- resAM_OWA[order(resAM_OWA$padj),]
 head(resAM_OWA)  
@@ -265,7 +306,7 @@ head(resAM_OWA)
 summary(resAM_OWA)
 
 
-resAM_OW <- results(dds, name = "treatment_OW_vs_AM", alpha = 0.05)
+resAM_OW <- results(dds1, name = "treatment_OW_vs_AM", alpha = 0.05)
 
 resAM_OW <- resAM_OW[order(resAM_OW$padj),]
 head(resAM_OW)  
@@ -275,7 +316,7 @@ summary(resAM_OW)
 ### Plot Individual genes ### 
 
 # Counts of specific top interaction gene! (important validatition that the normalization, model is working)
-d <-plotCounts(dds, gene = "TRINITY_DN29_c1_g2::TRINITY_DN29_c1_g2_i3::g.747::m.747", 
+d <-plotCounts(dds1, gene = "TRINITY_DN29_c1_g2::TRINITY_DN29_c1_g2_i3::g.747::m.747", 
                intgroup = (c("treatment", "generation")), returnData = TRUE)
 d
 
@@ -297,11 +338,11 @@ dds <- DESeqDataSetFromMatrix(countData = countsTableRound, colData = conds,
 dim(dds)
 
 # Filter 
-dds <- dds[rowSums(counts(dds) >= 15) >= 28,]
-nrow(dds) 
+dds5 <- dds[rowSums(counts(dds) >= 35) >= 28,]
+nrow(dds5) 
 
 # Subset the DESeqDataSet to the specific level of the "generation" factor
-dds_sub <- subset(dds, select = generation == 'F0')
+dds_sub <- subset(dds5, select = generation == 'F0')
 dim(dds_sub)
 
 # Perform DESeq2 analysis on the subset
@@ -329,10 +370,15 @@ p <- ggplot(d, aes(x = treatment, y = count, color = treatment, shape = generati
                           panel.grid.major = element_line(colour = "grey"))
 p <- p + geom_point(position = position_jitter(w = 0.2, h = 0), size = 3)
 p <- p + stat_summary(fun = mean, geom = "point", size = 5, alpha = 0.7) 
+
+png(filename = "myresults/figures/genes_dds5.png", width = 20, height = 16, units = "cm", res = 300)
 p
+dev.off()
 
 # We can make an MA plot
+png(filename = "myresults/figures/MA_dds5.png", width = 20, height = 16, units = "cm", res = 300)
 plotMA(res_F0_OWvAM, ylim = c(-4,4))
+dev.off()
 
 # Heatmap of top 20 DEGs sorted by pvalue
 
@@ -344,8 +390,10 @@ mat <- assay(vsd)[topgenes,]
 mat <- mat - rowMeans(mat)
 df <- as.data.frame(colData(dds_sub)[,c("generation","treatment")])
 pheatmap(mat, annotation_col = df)
-pheatmap(mat, annotation_col = df, cluster_cols = F)
 
+png(filename = "myresults/figures/pheatmap_indiv_dds5.png", width = 20, height = 16, units = "cm", res = 300)
+pheatmap(mat, annotation_col = df, cluster_cols = F, show_rownames = F)
+dev.off()
 
 ###################### Plot overlapping DEGs in a Venn Euler diagram ######################
 
@@ -377,35 +425,37 @@ res_F0_OWAvAM <- res_F0_OWAvAM[!is.na(res_F0_OWAvAM$padj),]
 degs_F0_OWAvAM <- row.names(res_F0_OWAvAM[res_F0_OWAvAM$padj < 0.05,])
 
 # Total
-length(degs_F0_OAvAM)  # 602
-length(degs_F0_OWvAM)  # 5517 
-length(degs_F0_OWAvAM)  # 3918
+length(degs_F0_OAvAM)  # 501
+length(degs_F0_OWvAM)  # 4672 
+length(degs_F0_OWAvAM)  # 3651
 
 # Intersections
-length(intersect(degs_F0_OAvAM,degs_F0_OWvAM))  # 444
-length(intersect(degs_F0_OAvAM,degs_F0_OWAvAM))  # 380
-length(intersect(degs_F0_OWAvAM,degs_F0_OWvAM))  # 2743
+length(intersect(degs_F0_OAvAM,degs_F0_OWvAM))  # 373
+length(intersect(degs_F0_OAvAM,degs_F0_OWAvAM))  # 330
+length(intersect(degs_F0_OWAvAM,degs_F0_OWvAM))  # 2525
 
 intWA <- intersect(degs_F0_OAvAM,degs_F0_OWvAM)
-length(intersect(degs_F0_OWAvAM,intWA)) # 338
+length(intersect(degs_F0_OWAvAM,intWA)) # 302
 
 # Number unique
 
-602-444-380+338 # 116 OA
-5517-444-2743+338 # 2668 OW 
-3918-380-2743+338 # 1133 OWA
+501-373-330+302 # 100 OA
+4672-373-2525+302 # 2076 OW 
+3651-330-2525+302 # 1098 OWA
 
-444-338 # 106 OA & OW
-380-338 # 42 OA & OWA
-2743-338 # 2405 OWA & OW
+373-302 # 71 OA & OW
+330-302 # 28 OA & OWA
+2525-302 # 2223 OWA & OW
 
 
 # Note that the names are important and have to be specific to line up the diagram
-fit1 <- euler(c("OA" = 116, "OW" = 2668, "OWA" = 1133, "OA&OW" = 106, "OA&OWA" = 42, 
-                "OW&OWA" = 2405, "OA&OW&OWA" = 338))
+fit1 <- euler(c("OA" = 100, "OW" = 2076, "OWA" = 1098, "OA&OW" = 71, "OA&OWA" = 28, 
+                "OW&OWA" = 2223, "OA&OW&OWA" = 302))
 
-
+png(filename = "myresults/figures/venn_dds5.png", width = 20, height = 16, units = "cm", res = 300)
 plot(fit1,  lty = 1:3, quantities = TRUE)
+dev.off()
+
 # lty changes the lines
 
 plot(fit1, quantities = TRUE, fill = "transparent",
@@ -413,7 +463,7 @@ plot(fit1, quantities = TRUE, fill = "transparent",
      labels = list(font = 4))
 
 
-#cross check
-1133+42+338+2405 # 3918, total OW
-106+338+2405+2668 # 5517, total OWA
-116+106+338+42    # 602, total OA
+# cross check
+2076+2223+302+71 # 4672, total OW
+1098+2223+302+28 # 3651, total OWA
+100+71+28+302   # 501, total OA

@@ -11,6 +11,9 @@ library(tidyverse)
 library(CorLevelPlot) 
 library(gridExtra)
 library(Rmisc) 
+library(pheatmap)
+
+############################## Day 1 - 10/25/23 ##############################
 
 ##### 1. Import the counts matrix and metadata and filter using DESeq2 #####
 
@@ -161,3 +164,148 @@ bwnet <- blockwiseModules(norm.counts,
 # smaller modules.
 
 cor <- temp_cor
+
+############################## Day 2 - 10/30/23 ##############################
+
+# To load the object from last time
+bwnet <- readRDS("myresults/bwnet.rds")
+
+##### 5. Model eigengenes #####
+
+module_eigengenes <- bwnet$MEs
+head(module_eigengenes)
+
+# get number of genes for each module
+table(bwnet$colors)
+
+# Plot the dendrogram and the module colors before and after merging underneath
+plotDendroAndColors(bwnet$dendrograms[[1]], cbind(bwnet$unmergedColors, bwnet$colors),
+                    c("unmerged", "merged"),
+                    dendroLabels = FALSE,
+                    addGuide = TRUE,
+                    hang = 0.03,
+                    guideHang = 0.05)
+
+# grey module = all genes that don't fall into other modules were assigned to the grey module
+# with higher soft power, more genes fall into the grey module.
+
+##### 6. Relate modules to traits #####
+
+# module trait associations
+traits <- sample_metadata[, c(5,8,11,14,17)]
+
+
+# Define numbers of genes and samples
+nSamples <- nrow(norm.counts)
+nGenes <- ncol(norm.counts)
+
+# test for correlation (Pearson's) between eigengenes and trait data
+module.trait.corr <- cor(module_eigengenes, traits, use = 'p')
+module.trait.corr.pvals <- corPvalueStudent(module.trait.corr, nSamples)
+
+# visualize module-trait association as a heatmap
+
+heatmap.data <- merge(module_eigengenes, traits, by = 'row.names')
+
+head(heatmap.data)
+
+heatmap.data <- heatmap.data %>% 
+  column_to_rownames(var = 'Row.names')
+
+names(heatmap.data)
+
+CorLevelPlot(heatmap.data,
+             x = names(heatmap.data)[12:16],
+             y = names(heatmap.data)[1:11],
+             col = c("blue1", "skyblue", "white", "pink", "red"))
+
+
+module.gene.mapping <- as.data.frame(bwnet$colors) # assigns module membership to each gene
+module.gene.mapping %>% 
+  filter(`bwnet$colors` == 'yellow') %>% 
+  rownames()
+
+groups <- sample_metadata[,c(3,1)]
+module_eigengene.metadata <- merge(groups, heatmap.data, by = 'row.names')
+
+# create a summary data frame of a particular module eigengene information
+MEyellow_summary <- summarySE(module_eigengene.metadata, measurevar="MEyellow", 
+                              groupvars = c("Generation","treatment"))
+
+#Plot a line interaction plot of a particular module eigengene
+ggplot(MEyellow_summary, aes(x=as.factor(Generation), y=MEyellow, color=treatment, fill = treatment, shape = treatment)) +
+  geom_point(size=5, stroke = 1.5 ) +
+  geom_errorbar(aes(ymin=MEyellow-se, ymax=MEyellow+se), width=.15) +
+  geom_line(aes(color=treatment, group=treatment, linetype = treatment)) +
+  scale_color_manual(values = c('#6699CC',"#F2AD00","#00A08A", "#CC3333")) +
+  scale_shape_manual(values=c(21,22,23,24), labels = c("Ambient", "Acidification","Warming", "OWA"))+
+  scale_fill_manual(values=c('#6699CC',"#F2AD00","#00A08A", "#CC3333"), labels = c("Ambient", "Acidification","Warming", "OWA"))+
+  xlab("Generation") +
+  theme_bw() +
+  theme(legend.position = "none") +
+  theme(panel.border = element_rect(color = "black", fill = NA, size = 4)) +
+  theme(text = element_text(size = 20)) +
+  theme(panel.grid.minor.y = element_blank(), legend.position = "none", plot.margin = margin(0,6,0,6))
+
+# 6B. Intramodular analysis: Identifying driver genes ---------------
+
+# Get top hub genes (genes with highest connectivity in the network)
+hubs <- chooseTopHubInEachModule(norm.counts, bwnet$colors, type = "signed", omitColors = "")
+hubs
+
+### Plot Individual genes  to check! ### 
+
+d <-plotCounts(dds, gene = "TRINITY_DN11845_c0_g1::TRINITY_DN11845_c0_g1_i9::g.36434::m.36434", intgroup = (c("treatment","Generation")), returnData = TRUE)
+d_summary <- summarySE(d, measurevar = "count", groupvars=c("Generation","treatment"))
+
+# here y-axis is normalized number of reads that map to the particular gene we're looking at
+# that's correlated strongly with this particular module.
+
+ggplot(d_summary, aes(x = as.factor(Generation), y=count, color=treatment, fill = treatment, shape = treatment)) +
+  geom_point(size=5, stroke = 1.5 ) +
+  geom_errorbar(aes(ymin=count-se, ymax = count+se), width=.15) +
+  geom_line(aes(color=treatment, group = treatment, linetype = treatment)) +
+  scale_color_manual(values = c('#6699CC',"#F2AD00","#00A08A", "#CC3333")) +
+  scale_shape_manual(values = c(21,22,23,24), labels = c("Ambient", "Acidification","Warming", "OWA"))+
+  scale_fill_manual(values = c('#6699CC',"#F2AD00","#00A08A", "#CC3333"), labels = c("Ambient", "Acidification","Warming", "OWA"))+
+  xlab("Generation") +
+  theme_bw() +
+  theme(legend.position = "none") +
+  theme(panel.border = element_rect(color = "black", fill = NA, size = 4))+
+  theme(text = element_text(size = 20)) +
+  theme(panel.grid.minor.y = element_blank(), legend.position = "none", plot.margin = margin(0,6,0,6))
+
+# Calculate the module membership and the associated p-values
+
+# The module membership/intramodular connectivity is calculated as the correlation of the eigengene and the gene expression profile. 
+# This quantifies the similarity of all genes on the array to every module.
+
+module.membership.measure <- cor(module_eigengenes, norm.counts, use = 'p')
+module.membership.measure.pvals <- corPvalueStudent(module.membership.measure, nSamples)
+
+module.membership.measure.pvals[1:10,1:10]
+
+## Now with purple
+
+# Make a heat map of gene expressions within modules.
+# Use the norm.counts matrix, subset based on module membership
+t_norm.counts <- norm.counts %>% t() %>% as.data.frame()
+
+# Purple module
+purple_transcripts <- module.gene.mapping %>% 
+  filter(`bwnet$colors` == 'purple') %>% 
+  rownames()
+
+t_norm.counts_purple <- t_norm.counts %>% 
+  filter(row.names(t_norm.counts) %in% purple_transcripts)
+
+t_norm.counts_purple <- t_norm.counts_purple - rowMeans(t_norm.counts_purple)
+df <- as.data.frame(colData(dds)[,c("Generation","treatment")])
+
+#blue to yellow color scheme
+paletteLength <- 50
+myColor <- colorRampPalette(c("dodgerblue", "white", "yellow"))(paletteLength)
+myBreaks <- c(seq(min(t_norm.counts_purple), 0, length.out=ceiling(paletteLength/2) + 1), 
+              seq(max(t_norm.counts_purple)/paletteLength, max(t_norm.counts_purple), length.out=floor(paletteLength/2)))
+pheatmap(t_norm.counts_purple, color = myColor, breaks = myBreaks,
+         show_colnames = FALSE, show_rownames = FALSE, annotation_col = df, main = "Yellow")
