@@ -107,14 +107,14 @@ dds5 <- DESeq(dds5)
 # particularly the high variance of the logarithm of count data when the mean is low."
 
 # this gives log2(n + 1)
-ntd <- normTransform(dds5)
+ntd <- normTransform(dds1)
  
 png(filename = "myresults/figures/ntd_dds5.png", width = 20, height = 16, units = "cm", res = 300)
 meanSdPlot(assay(ntd))
 dev.off()
 
 # Variance stabilizing transformation
-vsd <- vst(dds5, blind = FALSE)
+vsd <- vst(dds1, blind = FALSE)
 
 png(filename = "myresults/figures/vsd_dds5.png", width = 20, height = 16, units = "cm", res = 300)
 meanSdPlot(assay(vsd))
@@ -145,7 +145,7 @@ dev.off()
 # PCA to visualize global gene expression patterns
 
 # first transform the data for plotting using variance stabilization
-vsd <- vst(dds5, blind = FALSE)
+vsd <- vst(dds1, blind = FALSE)
 
 pcaData <- plotPCA(vsd, intgroup = c("treatment", "generation"), returnData = TRUE)
 percentVar <- round(100 * attr(pcaData, "percentVar"))
@@ -182,16 +182,16 @@ F0 <- ggplot(dataF0, aes(PC1, PC2)) +
   #guides(shape = guide_legend(override.aes = list(size = 5)))+
   theme_bw() +
   theme(legend.position = "none") +
-  theme(panel.border = element_rect(color = "black", fill = NA, size = 4))+
+  theme(panel.border = element_rect(color = "black", fill = NA, size = 2))+
   theme(text = element_text(size = 20)) +
   theme(legend.title = element_blank())
 
 F0
 
 
-#png("PCA_F0.png", res=300, height=5, width=5, units="in")
-#ggarrange(F0, nrow = 1, ncol=1)
-#dev.off()
+png("PCA_F0.png", res=300, height=5, width=5, units="in")
+ggarrange(F0, nrow = 1, ncol=1)
+dev.off()
 
 #### F2
 
@@ -216,7 +216,7 @@ F2 <- ggplot(dataF2, aes(PC1, PC2)) +
   guides(shape = guide_legend(override.aes = list(size = 5)))+
   theme_bw() +
   theme(legend.position = "none") +
-  theme(panel.border = element_rect(color = "black", fill = NA, size = 4))+
+  theme(panel.border = element_rect(color = "black", fill = NA, size = 2))+
   theme(text = element_text(size = 20)) +
   theme(legend.title = element_blank())
 
@@ -251,7 +251,7 @@ F4 <- ggplot(dataF4, aes(PC1, PC2)) +
   guides(shape = guide_legend(override.aes = list(size = 5)))+
   theme_bw() +
   theme(legend.position = "none") +
-  theme(panel.border = element_rect(color = "black", fill = NA, size = 4))+
+  theme(panel.border = element_rect(color = "black", fill = NA, size = 2))+
   theme(text = element_text(size = 20)) +
   theme(legend.title = element_blank())
 
@@ -280,7 +280,7 @@ F11 <- ggplot(dataF11, aes(PC1, PC2)) +
   guides(shape = guide_legend(override.aes = list(size = 5)))+
   theme_bw() +
   theme(legend.position = "none") +
-  theme(panel.border = element_rect(color = "black", fill = NA, size = 4))+
+  theme(panel.border = element_rect(color = "black", fill = NA, size = 2))+
   theme(text = element_text(size = 20)) +
   theme(legend.title = element_blank())
 
@@ -292,6 +292,7 @@ F11
 # dev.off()
 
 ggarrange(F0, F2, F4, F11, nrow = 2, ncol = 2)
+ggsave("myresults/figures/PCA.png", width = 25, height = 16, units = "cm", dpi = 300)
 
 
 ###################### Explore differential expression ######################
