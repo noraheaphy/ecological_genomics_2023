@@ -93,14 +93,14 @@ list.files()
 
 ### read in selection statistics (these are chi^2 distributed)
 
-s <- npyLoad("allRS_poly.selection.npy")
+s <- npyLoad("RS_mapped_poly.selection.npy")
 
 # convert test statistic to p-value
 pval <- as.data.frame(1 - pchisq(s, 1))
 names(pval) = c("p_PC1", "p_PC2")
 
 ## read positions
-p <- read.table("allRS_poly_mafs.sites", sep = "\t", header = T, stringsAsFactors = T)
+p <- read.table("RS_mapped_poly_mafs.sites", sep = "\t", header = T, stringsAsFactors = T)
 dim(p)
 
 p_filtered = p[which(p$kept_sites==1),]
